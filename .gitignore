@@ -1,2 +1,2 @@
 # Ignore sensitive configuration files
-/config/*.env
+/database/config/*.env

@@ -1,24 +1,14 @@
 /********************************************************
- * File: init.sql
+ * File: erp_schema.sql
  * Version: 1.0
  * Author: Janis Grüttmüller on 13.02.2025
- * Description: sql script to initialize the ERP Systems 
- * productive database and pre-populate it with data
+ * Description: Schema for the ERP systems database
  *
  * change history:
  * 13.02.2025 - added the user access managment logic
  *******************************************************/
 
-/* ====================================================================== *
- *                    create database and schema                          *
- * ====================================================================== */
-
-CREATE DATABASE IF NOT EXISTS erp_prod;
-
-USE erp_prod;
-
-
--------------- Users, Roles and Permissions (User Administration) -------------------
+------------- Users, Roles and Permissions (User Administration Modul) ------------------
 CREATE TABLE roles (
     role_id INT PRIMARY KEY AUTO_INCREMENT,
     role_name VARCHAR(255) NOT NULL,
@@ -34,7 +24,6 @@ CREATE TABLE permissions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
 
 CREATE TABLE users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -75,7 +64,7 @@ CREATE TABLE user_roles (
     FOREIGN KEY (role_id) REFERENCES roles(role_id),
 );
 
------------------------- Change Logging for User Access Rights -----------------------
+--------------------------- Change Logging for User Access Rights ----------------------------
 
 CREATE TABLE security_audit_log (
     log_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -88,7 +77,7 @@ CREATE TABLE security_audit_log (
     FOREIGN KEY (changed_by) REFERENCES users(user_id),
 );
 
------------- Employee, Payroll, Salary and Benefits (HR Operations) -------------------
+------------ Employee, Payroll, Salary and Benefits (HR Operations Modul) -------------------
 
 -- table to store essential employee information and personal data
 CREATE TABLE employees (
@@ -165,80 +154,3 @@ CREATE TABLE employee_benefits (
     amount DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id) ON DELETE CASCADE
 );
-
----------------- Transactions, General Ledger, Controlling (Finance Modul) -----------------------------
-
-
-
-
-
-/* ====================================================================== *
- *                    populate database with data                         *
- * ====================================================================== */
-
-
-START TRANSACTION;
-
--- default system user for initial system setup -> it is highly recommended to lock the user following the initial setup
-INSERT INTO users (user_id, username, user_status, password_hash, created_by) VALUES (1, 'SYS_USER', 'ACTIVE', '$2a$10$Z6v/1IM1G2x6e47i1HnhvuWAmNgTETU7RiYzc4kRxu7LdNy1.PARu', 1); -- password: "initERP@2025" hashed with BCrypt
-
-COMMIT;
-
-START TRANSACTION;
--- Create Roles
-INSERT INTO roles (role_id, role_name, role_description) VALUES
-    (1, 'Admin', 'Full access to system configurations and user management'),
-    (2, 'FI Ops', 'Manages financial transactions, reports, and analysis'),
-    (3, 'HR Ops', 'Manages employee records, payroll, and benefits'),
-    (4, 'Employee', 'Access to personal data, payroll records, and requests of absence')
-;
-
--- Create Permissions
-INSERT INTO permissions (permission_id, permission_name, permission_description) VALUES
-    (1, 'View Financial Data', 'Ability to view financial transactions and reports'),
-    (2, 'Modify Financial Data', 'Ability to create and edit financial transactions'),
-    (3, 'Approve Financial Data', 'Ability to approve or finalize financial data'),
-    (4, 'View Payroll Data', 'Ability to view payroll and salary information'),
-    (5, 'Modify Payroll Data', 'Ability to create and edit payroll and salary information'),
-    (6, 'Approve Payroll Data', 'Ability to approve payroll and salary changes'),
-    (7, 'View Employee Data', 'Ability to view employee personal information'),
-    (8, 'Modify Employee Data', 'Ability to edit employee personal information'),
-    (9, 'Submit Request of Absence', 'Ability to submit and view personal requests of absence'),
-    (10, 'Create User', 'Ability to create new user accounts'),
-    (11, 'Deactivate User', 'Ability to deactivate existing user accounts'),
-    (12, 'Modify User Access', 'Ability to modify access rights of existing user accounts')
-;
-
-------------------------------- Assign Permissions to Roles --------------------------------------
-
--- Admin (Full Access)
-INSERT INTO role_permissions (role_id, permission_id) VALUES
-    (1, 1), (1, 2), (1, 3),     -- Financial Data (View, Modify, Approve)
-    (1, 4), (1, 5), (1, 6),     -- Payroll Data (View, Modify, Approve)
-    (1, 7), (1, 8),             -- Employee Data (View, Modify, Update)
-    (1, 10), (1, 11), (1, 12)   -- User Access Management (Create, Deactivate, Modify Access)
-;
-
--- FI Ops (Finance Operations)
-INSERT INTO role_permissions (role_id, permission_id) VALUES
-    (2, 1),  -- View Financial Data
-    (2, 2),  -- Modify Financial Data
-    (2, 3)   -- Approve Financial Data
-;
-
--- HR Ops (HR Operations)
-INSERT INTO role_permissions (role_id, permission_id) VALUES
-    (3, 4), (3, 5), (3, 6),  -- Payroll Data (View, Modify, Approve)
-    (3, 7), (3, 8), (3, 9),  -- Employee Data (View, Modify, Update)
-    (3, 9)                   -- Submit & Manage Requests
-;
-
--- Employee (Personal Access)
-INSERT INTO role_permissions (role_id, permission_id) VALUES
-    (4, 4),  -- View Payroll Data
-    (4, 7),  -- View Personal Employee Data
-    (4, 9)  -- Submit or view Request of absence
-;
-
-COMMIT;
-
