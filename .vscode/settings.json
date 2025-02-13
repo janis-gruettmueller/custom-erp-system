@@ -1,0 +1,9 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "backend/src/main/webapp/WEB-INF/lib/jbcrypt-0.4.jar",
+        "backend/src/main/webapp/WEB-INF/lib/mysql-connector-j-9.0.0.jar",
+        "backend/src/main/webapp/WEB-INF/lib/javax.servlet-api-4.0.1.jar"
+    ],
+    "java.jdt.ls.java.home": "/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home"
+}
