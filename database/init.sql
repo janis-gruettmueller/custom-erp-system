@@ -176,13 +176,6 @@ CREATE TABLE employee_benefits (
 
 
 START TRANSACTION;
-
--- default system user for initial system setup -> it is highly recommended to lock the user following the initial setup
-INSERT INTO users (user_id, username, user_status, password_hash, created_by) VALUES (1, 'SYS_USER', 'ACTIVE', '$2a$10$Z6v/1IM1G2x6e47i1HnhvuWAmNgTETU7RiYzc4kRxu7LdNy1.PARu', 1); -- password: "initERP@2025" hashed with BCrypt
-
-COMMIT;
-
-START TRANSACTION;
 -- Create Roles
 INSERT INTO roles (role_id, role_name, role_description) VALUES
     (1, 'Admin', 'Full access to system configurations and user management'),
@@ -214,7 +207,7 @@ Error Code: 1062. Duplicate entry '3-9' for key 'role_permissions.PRIMARY'
 INSERT INTO role_permissions (role_id, permission_id) VALUES
     (1, 1), (1, 2), (1, 3),     -- Financial Data (View, Modify, Approve)
     (1, 4), (1, 5), (1, 6),     -- Payroll Data (View, Modify, Approve)
-    (1, 7), (1, 8),             -- Employee Data (View, Modify, Update)
+    (1, 7), (1, 8), (1, 9),     -- Employee Data (View, Modify, Update)
     (1, 10), (1, 11), (1, 12)   -- User Access Management (Create, Deactivate, Modify Access)
 ;
 
@@ -237,5 +230,13 @@ INSERT INTO role_permissions (role_id, permission_id) VALUES
     (4, 7),  -- View Personal Employee Data
     (4, 9)  -- Submit or view Request of absence
 ;
+
+COMMIT;
+
+START TRANSACTION;
+
+-- default system user for initial system setup -> it is highly recommended to lock the user following the initial setup
+INSERT INTO users (user_id, username, user_status, password_hash, created_by) VALUES (1, 'SYS_USER', 'ACTIVE', '$2a$10$Z6v/1IM1G2x6e47i1HnhvuWAmNgTETU7RiYzc4kRxu7LdNy1.PARu', 1);  -- password: "initERP@2025" hashed with BCrypt
+INSERT INTO user_roles (user_id, role_id) VALUES (1, 1) -- assign SYS_USER admin rights
 
 COMMIT;
