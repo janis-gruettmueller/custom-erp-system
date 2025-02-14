@@ -70,10 +70,13 @@ CREATE TABLE role_permissions (
 CREATE TABLE user_roles (
     user_id INT NOT NULL,
     role_id INT NOT NULL,
+    assigned_by INT NOT NULL,
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, role_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (role_id) REFERENCES roles(role_id)
+    FOREIGN KEY (role_id) REFERENCES roles(role_id),
+    FOREIGN KEY (assigned_by) REFERENCES users(user_id)
+    
 );
 
 ------------------------ Change Logging for User Access Rights -----------------------
@@ -82,11 +85,11 @@ CREATE TABLE security_audit_log (
     log_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     role_id INT DEFAULT NULL,
-    changed_by INT NOT NULL,
-    change_type ENUM('USER_CREATED', 'USER_DELETED', 'ROLE_ASSIGNED', 'ROLE_REMOVED') NOT NULL,
+    updated_by INT NOT NULL,
+    action_type ENUM('USER_CREATED', 'USER_DELETED', 'ROLE_ASSIGNED', 'ROLE_REMOVED') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (changed_by) REFERENCES users(user_id)
+    FOREIGN KEY (updated_by) REFERENCES users(user_id)
 );
 
 ------------ Employee, Payroll, Salary and Benefits (HR Operations) -------------------
