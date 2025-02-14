@@ -13,7 +13,9 @@
  *                    create database and schema                          *
  * ====================================================================== */
 
-CREATE DATABASE IF NOT EXISTS erp_prod;
+DROP DATABASE IF EXISTS erp_prod;
+
+CREATE DATABASE erp_prod;
 
 USE erp_prod;
 
@@ -201,7 +203,6 @@ INSERT INTO permissions (permission_id, permission_name, permission_description)
 ;
 
 ------------------------------- Assign Permissions to Roles --------------------------------------
-Error Code: 1062. Duplicate entry '3-9' for key 'role_permissions.PRIMARY'
 
 -- Admin (Full Access)
 INSERT INTO role_permissions (role_id, permission_id) VALUES
@@ -237,6 +238,6 @@ START TRANSACTION;
 
 -- default system user for initial system setup -> it is highly recommended to lock the user following the initial setup
 INSERT INTO users (user_id, username, user_status, password_hash, created_by) VALUES (1, 'SYS_USER', 'ACTIVE', '$2a$10$Z6v/1IM1G2x6e47i1HnhvuWAmNgTETU7RiYzc4kRxu7LdNy1.PARu', 1);  -- password: "initERP@2025" hashed with BCrypt
-INSERT INTO user_roles (user_id, role_id) VALUES (1, 1) -- assign SYS_USER admin rights
+INSERT INTO user_roles (user_id, role_id) VALUES (1, 1); -- assign SYS_USER admin rights
 
 COMMIT;
