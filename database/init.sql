@@ -50,7 +50,6 @@ CREATE TABLE users (
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     valid_until TIMESTAMP DEFAULT NULL,
-    last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(user_id),
     INDEX idx_username (username)
 );
@@ -72,7 +71,7 @@ CREATE TABLE user_roles (
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, role_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (role_id) REFERENCES roles(role_id),
+    FOREIGN KEY (role_id) REFERENCES roles(role_id)
 );
 
 ------------------------ Change Logging for User Access Rights -----------------------
@@ -85,7 +84,7 @@ CREATE TABLE security_audit_log (
     change_type ENUM('USER_CREATED', 'USER_DELETED', 'ROLE_ASSIGNED', 'ROLE_REMOVED') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (changed_by) REFERENCES users(user_id),
+    FOREIGN KEY (changed_by) REFERENCES users(user_id)
 );
 
 ------------ Employee, Payroll, Salary and Benefits (HR Operations) -------------------
@@ -103,9 +102,9 @@ CREATE TABLE employees (
     start_date DATE DEFAULT NULL,
     termination_date DATE DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INT,
-    last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    FOREIGN KEY (created_by) REFERENCES users(user_id),
+    created_by INT NOT NULL,
+    last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
 );
 
 -- table to store historical payroll data
@@ -130,10 +129,9 @@ CREATE TABLE salaries (
     employee_id INT NOT NULL,
     base_salary DECIMAL(10,2) NOT NULL,
     effective_date DATE NOT NULL,
-    modified_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (employee_id) REFERENCES employees(employee_id) ON DELETE CASCADE,
-    FOREIGN KEY (modified_by) REFERENCES users(user_id) ON DELETE SET NULL
+    last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(employee_id) ON DELETE CASCADE
 );
 
 -- table to store payroll deductions like taxes, benefits, etc.
@@ -210,6 +208,7 @@ INSERT INTO permissions (permission_id, permission_name, permission_description)
 ;
 
 ------------------------------- Assign Permissions to Roles --------------------------------------
+Error Code: 1062. Duplicate entry '3-9' for key 'role_permissions.PRIMARY'
 
 -- Admin (Full Access)
 INSERT INTO role_permissions (role_id, permission_id) VALUES
@@ -229,8 +228,7 @@ INSERT INTO role_permissions (role_id, permission_id) VALUES
 -- HR Ops (HR Operations)
 INSERT INTO role_permissions (role_id, permission_id) VALUES
     (3, 4), (3, 5), (3, 6),  -- Payroll Data (View, Modify, Approve)
-    (3, 7), (3, 8), (3, 9),  -- Employee Data (View, Modify, Update)
-    (3, 9)                   -- Submit & Manage Requests
+    (3, 7), (3, 8), (3, 9)   -- Employee Data (View, Modify, Update) + Submit & Manage Requests
 ;
 
 -- Employee (Personal Access)
@@ -241,4 +239,3 @@ INSERT INTO role_permissions (role_id, permission_id) VALUES
 ;
 
 COMMIT;
-
