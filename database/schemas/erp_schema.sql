@@ -8,7 +8,8 @@
  * 13.02.2025 - added the user access managment logic
  *******************************************************/
 
-------------- Users, Roles and Permissions (User Administration Modul) ------------------
+ 
+-------------- Users, Roles and Permissions (User Administration Modul) -------------------
 CREATE TABLE roles (
     role_id INT PRIMARY KEY AUTO_INCREMENT,
     role_name VARCHAR(255) NOT NULL,
@@ -25,6 +26,7 @@ CREATE TABLE permissions (
     last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+
 CREATE TABLE users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -39,7 +41,6 @@ CREATE TABLE users (
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     valid_until TIMESTAMP DEFAULT NULL,
-    last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(user_id),
     INDEX idx_username (username)
 );
@@ -61,10 +62,10 @@ CREATE TABLE user_roles (
     assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, role_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (role_id) REFERENCES roles(role_id),
+    FOREIGN KEY (role_id) REFERENCES roles(role_id)
 );
 
---------------------------- Change Logging for User Access Rights ----------------------------
+------------------------ Change Logging for User Access Rights -----------------------
 
 CREATE TABLE security_audit_log (
     log_id INT PRIMARY KEY AUTO_INCREMENT,
@@ -74,10 +75,10 @@ CREATE TABLE security_audit_log (
     change_type ENUM('USER_CREATED', 'USER_DELETED', 'ROLE_ASSIGNED', 'ROLE_REMOVED') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (changed_by) REFERENCES users(user_id),
+    FOREIGN KEY (changed_by) REFERENCES users(user_id)
 );
 
------------- Employee, Payroll, Salary and Benefits (HR Operations Modul) -------------------
+------------ Employee, Payroll, Salary and Benefits (HR Operations) -------------------
 
 -- table to store essential employee information and personal data
 CREATE TABLE employees (
@@ -92,9 +93,9 @@ CREATE TABLE employees (
     start_date DATE DEFAULT NULL,
     termination_date DATE DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INT,
-    last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    FOREIGN KEY (created_by) REFERENCES users(user_id),
+    created_by INT NOT NULL,
+    last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
 );
 
 -- table to store historical payroll data
@@ -119,10 +120,9 @@ CREATE TABLE salaries (
     employee_id INT NOT NULL,
     base_salary DECIMAL(10,2) NOT NULL,
     effective_date DATE NOT NULL,
-    modified_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (employee_id) REFERENCES employees(employee_id) ON DELETE CASCADE,
-    FOREIGN KEY (modified_by) REFERENCES users(user_id) ON DELETE SET NULL
+    last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (employee_id) REFERENCES employees(employee_id) ON DELETE CASCADE
 );
 
 -- table to store payroll deductions like taxes, benefits, etc.
@@ -154,3 +154,5 @@ CREATE TABLE employee_benefits (
     amount DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id) ON DELETE CASCADE
 );
+
+---------------- Transactions, General Ledger, Controlling (Finance Modul) -----------------------------

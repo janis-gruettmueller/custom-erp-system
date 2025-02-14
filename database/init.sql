@@ -20,7 +20,7 @@ CREATE DATABASE erp_prod;
 USE erp_prod;
 
 
--------------- Users, Roles and Permissions (User Administration) -------------------
+-------------- Users, Roles and Permissions (User Administration Modul) -------------------
 CREATE TABLE roles (
     role_id INT PRIMARY KEY AUTO_INCREMENT,
     role_name VARCHAR(255) NOT NULL,

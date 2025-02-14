@@ -1,0 +1,54 @@
+# ERP Data Modell 
+
++-------------------+       +-------------------+       +-------------------+
+|      roles        |       |   permissions     |       |      users        |
++-------------------+       +-------------------+       +-------------------+
+| role_id (PK)      |       | permission_id (PK)|       | user_id (PK)      |
+| role_name         |       | permission_name   |       | username          |
+| role_description  |       | permission_desc   |       | user_status       |
+| created_at        |       | created_at        |       | password_hash     |
+| last_updated_at   |       | last_updated_at   |       | num_failed_login  |
++-------------------+       +-------------------+       | created_by (FK)   |
+                                                        | created_at        |
+                                                        | valid_until       |
+                                                        +-------------------+
+
++-------------------+       +------------------------+       +--------------------+
+|   user_roles      |       |    role_permissions    |       | security_audit_log |
++-------------------+       +------------------------+       +--------------------+
+| user_id (FK, PK)  |       | role_id (FK, PK)       |       | log_id (PK)        |
+| role_id (FK, PK)  |       | permission_id (FK, PK) |       | user_id (FK)       |
+| assigned_at       |       | created_at             |       | role_id (FK)       |
++-------------------+       +------------------------+       | changed_by (FK)    |
+                                                             | change_type        |
+                                                             | created_at         |
+                                                             +--------------------+
+
++-------------------+       +-------------------+       +-------------------+
+|    employees      |       |     payroll       |       |    salaries       |
++-------------------+       +-------------------+       +-------------------+
+| employee_id (PK)  |       | payroll_id (PK)   |       | salary_id (PK)    |
+| first_name        |       | employee_id (FK)  |       | employee_id (FK)  |
+| last_name         |       | pay_period_start  |       | base_salary       |
+| email             |       | pay_period_end    |       | effective_date    |
+| job_title         |       | gross_salary      |       | created_at        |
+| department        |       | total_deductions  |       | last_updated_at   |
+| employment_type   |       | net_salary        |       +-------------------+
+| hire_date         |       | payment_date      |
+| start_date        |       | payment_status    |
+| termination_date  |       | created_at        |
+| created_at        |       | last_updated_at   |
+| created_by (FK)   |       +-------------------+
+| last_updated_at   |
++-------------------+
+
++-------------------+       +---------------------+       +-------------------+
+|payroll_deductions |       | payment_details     |       | employee_benefits |
++-------------------+       +---------------------+       +-------------------+
+| deduction_id (PK) |       | employee_id (PK)    |       | benefit_id (PK)   |
+| payroll_id (FK)   |       | payment_method      |       | employee_id (FK)  |
+| deduction_type    |       | account_holder_name |       | benefit_type      |
+| amount            |       | encrypted_bank_acct |       | start_date        |
++-------------------+       | created_at          |       | end_date          |
+                            | last_updated_at     |       | amount            |
+                            +---------------------+       +-------------------+
