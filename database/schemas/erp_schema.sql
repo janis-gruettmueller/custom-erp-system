@@ -6,10 +6,12 @@
  *
  * change history:
  * 13.02.2025 - added the user access managment logic
+ *
+ * 16.02.205 - small adjustments for better performance
  *******************************************************/
 
  
--------------- Users, Roles and Permissions (User Administration Modul) -------------------
+/*------------ Users, Roles and Permissions (User Administration Modul) ------------------*/
 CREATE TABLE roles (
     role_id INT PRIMARY KEY AUTO_INCREMENT,
     role_name VARCHAR(255) NOT NULL,
@@ -36,12 +38,17 @@ CREATE TABLE users (
         - LOCKED: User is temporarily blocked (e.g., failed logins, security issues).
         - DELETED: Soft delete -> User cannot log in, and role mappings are removed.
     */
+    is_verified BOOLEAN DEFAULT FALSE,
     password_hash VARCHAR(255) NOT NULL,
-    num_failed_login INT DEFAULT 0,
-    created_by INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    num_failed_login_attempts INT DEFAULT 0,
+    last_login_at TIMESTAMP DEFAULT NULL,
     valid_until TIMESTAMP DEFAULT NULL,
-    FOREIGN KEY (created_by) REFERENCES users(user_id),
+    created_by INT NOT NULL DEFAULT 1, -- Default to System user (user_id = 1)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_updated_by INT DEFAULT NULL,
+    last_updated_at TIMESTAMP DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE RESTRICT,
+    FOREIGN KEY (last_updated_by) REFERENCES users(user_id),
     INDEX idx_username (username)
 );
 
@@ -49,36 +56,53 @@ CREATE TABLE users (
 CREATE TABLE role_permissions (
     role_id INT NOT NULL,
     permission_id INT NOT NULL,
+    created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (role_id, permission_id),
     FOREIGN KEY (role_id) REFERENCES roles(role_id),
-    FOREIGN KEY (permission_id) REFERENCES permissions(permission_id)
+    FOREIGN KEY (permission_id) REFERENCES permissions(permission_id),
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
 );
 
 -- table for managing user access rights
 CREATE TABLE user_roles (
     user_id INT NOT NULL,
     role_id INT NOT NULL,
-    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by INT NOT NULL,
     PRIMARY KEY (user_id, role_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (role_id) REFERENCES roles(role_id)
+    FOREIGN KEY (role_id) REFERENCES roles(role_id), 
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
 );
 
------------------------- Change Logging for User Access Rights -----------------------
+/*------------------------ Change Logging / Audit-Logs ------------------------------*/
 
 CREATE TABLE security_audit_log (
     log_id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
-    role_id INT DEFAULT NULL,
+    role_id INT NOT NULL,
     changed_by INT NOT NULL,
-    change_type ENUM('USER_CREATED', 'USER_DELETED', 'ROLE_ASSIGNED', 'ROLE_REMOVED') NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    changed_at TIMESTAMP NOT NULL,
+    activity_type ENUM('ROLE_ASSIGNED', 'ROLE_REMOVED') NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (changed_by) REFERENCES users(user_id)
 );
 
------------- Employee, Payroll, Salary and Benefits (HR Operations) -------------------
+CREATE TABLE user_history_log (
+    log_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    changed_by INT NOT NULL,
+    changed_at TIMESTAMP NOT NULL,
+    activity_type ENUM('USER_CREATED', 'USER_DEACTIVATED', 'USER_LOCKED', 'LOGIN_SUCCESS', 'LOGIN_FAILURE', 'OTHER'),
+    field_name ENUM('user_status', 'is_verified', 'password_hash', 'num_failed_login_attempts', 'last_login_at', 'valid_until') DEFAULT NULL,
+    old_value TEXT DEFAULT NULL,
+    new_value TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (changed_by) REFERENCES users(user_id)
+);
+
+/*------------ Employee, Payroll, Salary and Benefits (HR Operations) -------------------*/
 
 -- table to store essential employee information and personal data
 CREATE TABLE employees (
@@ -155,4 +179,15 @@ CREATE TABLE employee_benefits (
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id) ON DELETE CASCADE
 );
 
----------------- Transactions, General Ledger, Controlling (Finance Modul) -----------------------------
+
+-- table for the mapping of employees to user accounts
+CREATE TABLE user_employee_link (
+    user_id INT NOT NULL,
+    employee_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, employee_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
+);
+
+/*---------------- Transactions, General Ledger, Controlling (Finance Modul) ---------------------*/
