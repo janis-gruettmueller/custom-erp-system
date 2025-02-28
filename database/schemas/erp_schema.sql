@@ -32,17 +32,18 @@ CREATE TABLE permissions (
 CREATE TABLE users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE,
-    user_status ENUM('ACTIVE', 'LOCKED', 'DELETED') NOT NULL DEFAULT 'ACTIVE',
+    user_status ENUM('ACTIVE', 'LOCKED', 'DEACTIVATED') NOT NULL DEFAULT 'ACTIVE',
     /*
         - ACTIVE: User can log in and use the system.
         - LOCKED: User is temporarily blocked (e.g., failed logins, security issues).
-        - DELETED: Soft delete -> User cannot log in, and role mappings are removed.
+        - DEACTIVATED: Soft delete -> User cannot log in, and role mappings are removed.
     */
+    user_type ENUM('NORMAL', 'ADMIN', 'SYSTEM') NOT NULL DEFAULT 'NORMAL',
     is_verified BOOLEAN DEFAULT FALSE,
     password_hash VARCHAR(255) NOT NULL,
     num_failed_login_attempts INT DEFAULT 0,
     last_login_at TIMESTAMP DEFAULT NULL,
-    valid_until TIMESTAMP DEFAULT NULL,
+    valid_until DATE DEFAULT NULL,
     created_by INT NOT NULL DEFAULT 1, -- Default to System user (user_id = 1)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_updated_by INT DEFAULT NULL,
@@ -83,7 +84,7 @@ CREATE TABLE security_audit_log (
     user_id INT NOT NULL,
     role_id INT NOT NULL,
     changed_by INT NOT NULL,
-    changed_at TIMESTAMP NOT NULL,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     activity_type ENUM('ROLE_ASSIGNED', 'ROLE_REMOVED') NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (changed_by) REFERENCES users(user_id)
@@ -94,10 +95,10 @@ CREATE TABLE user_history_log (
     user_id INT NOT NULL,
     changed_by INT NOT NULL,
     changed_at TIMESTAMP NOT NULL,
-    activity_type ENUM('USER_CREATED', 'USER_DEACTIVATED', 'USER_LOCKED', 'LOGIN_SUCCESS', 'LOGIN_FAILURE', 'OTHER'),
     field_name ENUM('user_status', 'is_verified', 'password_hash', 'num_failed_login_attempts', 'last_login_at', 'valid_until') DEFAULT NULL,
     old_value TEXT DEFAULT NULL,
     new_value TEXT NOT NULL,
+    description TEXT DEFAULT NULL,
     FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (changed_by) REFERENCES users(user_id)
 );
@@ -112,14 +113,19 @@ CREATE TABLE employees (
     email VARCHAR(255) NOT NULL,
     job_titel VARCHAR(100),
     department VARCHAR(100),
-    employment_type ENUM('FULL_TIME', 'PART_TIME', 'CONTRACTOR') NOT NULL,
+    employment_type ENUM('FULL_TIME', 'PART_TIME', 'INTERN') NOT NULL,
+    employment_status ENUM('ACTIVE', 'TERMINATED', 'RESIGNED', 'RETIRED', 'ON_LEAVE', 'SUSPENDED') NOT NULL,
     hire_date DATE NOT NULL,
     start_date DATE DEFAULT NULL,
     termination_date DATE DEFAULT NULL,
+    termination_reason ENUM('Resignation', 'Dismissal', 'End of Contract', 'Retirement'),
+    retention_end_date DATE DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by INT NOT NULL,
+    last_updated_by INT DEFAULT NULL,
     last_updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES users(user_id)
+    FOREIGN KEY (created_by) REFERENCES users(user_id),
+    FOREIGN KEY (last_updated_by) REFERENCES users(user_id)
 );
 
 -- table to store historical payroll data

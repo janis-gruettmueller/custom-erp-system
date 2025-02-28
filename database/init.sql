@@ -239,7 +239,7 @@ FOR EACH ROW
 BEGIN
     INSERT INTO user_history_log (user_id, changed_by, changed_at, new_value, description)
     VALUES (NEW.user_id, NEW.created_by, NEW.created_at, 
-			JSON_OBJECT('username', NEW.username, 'user_status', NEW.user_status, , 'user_type', NEW.user_type, 'valid_until', NEW.valid_until), 
+			JSON_OBJECT('username', NEW.username, 'user_status', NEW.user_status, 'user_type', NEW.user_type, 'valid_until', NEW.valid_until), 
             'new user creation');
 END $$
 
@@ -256,19 +256,19 @@ BEGIN
         -- check if user was locked
         IF NEW.user_status = 'LOCKED' THEN
             INSERT INTO user_history_log (user_id, changed_by, changed_at, field_name, old_value, new_value, description)
-            VALUES (NEW.user_id, NEW.last_updated_by, NEW.last_updated_at, 'user_status', OLD.user_status, NEW.user_status, 'lock user account');
+            VALUES (NEW.user_id, NEW.last_updated_by, NEW.last_updated_at, 'user_status', OLD.user_status, NEW.user_status, 'user account locked');
         -- check if user was deactivated
-        ELSEIF NEW.user_status = 'DELETED' THEN
+        ELSEIF NEW.user_status = 'DEACTIVATED' THEN
             INSERT INTO user_history_log (user_id, changed_by, changed_at, field_name, old_value, new_value, description)
-            VALUES (NEW.user_id, NEW.last_updated_by, NEW.last_updated_at, 'user_status', OLD.user_status, NEW.user_status, 'deactivate user account');
+            VALUES (NEW.user_id, NEW.last_updated_by, NEW.last_updated_at, 'user_status', OLD.user_status, NEW.user_status, 'user account deactivated');
         -- check if user was unlocked
         ELSEIF NEW.user_status = 'ACTIVE' AND OLD.user_status = 'LOCKED' THEN
             INSERT INTO user_history_log (user_id, changed_by, changed_at, field_name, old_value, new_value, description)
-            VALUES (NEW.user_id, NEW.last_updated_by, NEW.last_updated_at, 'user_status', OLD.user_status, NEW.user_status, 'unlock user account');
+            VALUES (NEW.user_id, NEW.last_updated_by, NEW.last_updated_at, 'user_status', OLD.user_status, NEW.user_status, 'user account unlocked');
         -- check if user was reactivated
         ELSEIF NEW.user_status = 'ACTIVE' AND OLD.user_status = 'DELETED' THEN
             INSERT INTO user_history_log (user_id, changed_by, changed_at, field_name, old_value, new_value, description)
-            VALUES (NEW.user_id, NEW.last_updated_by, NEW.last_updated_at, 'user_status', OLD.user_status, NEW.user_status, 'reactivate user account');
+            VALUES (NEW.user_id, NEW.last_updated_by, NEW.last_updated_at, 'user_status', OLD.user_status, NEW.user_status, 'user account reactivated');
         END IF;
     END IF;
 
@@ -429,7 +429,6 @@ DELIMITER $$
 CREATE PROCEDURE TerminateEmployee (
 	employee_id_param INT
 ) BEGIN
-
 	START TRANSACTION;
     
 	UPDATE employees
@@ -443,7 +442,7 @@ CREATE PROCEDURE TerminateEmployee (
     
     -- deactivate all associated user accounts
     UPDATE users
-    SET user_status = 'DEACTIVATED', last_updated_by = 2,
+    SET user_status = 'DEACTIVATED', last_updated_by = 2
     WHERE user_id IN (
         SELECT user_id FROM user_employee_link WHERE employee_id = employee_id_param
     );
@@ -502,7 +501,7 @@ INSERT INTO permissions (permission_id, permission_name, permission_description)
     (14, 'Modify User Access', 'Ability to modify access rights of existing user accounts'),
     (15, 'Modify System Settings', 'Ability to modify system settings and configurations'),
     (16, 'Run Background Jobs', 'Ability to start and run automated background jobs'),
-    (17, 'Run Automated Processes', 'Ability to start and run automated system processes'),
+    (17, 'Run Automated Processes', 'Ability to start and run automated system processes')
 ;
 
 /*------------------- create system users for initial system setup and configuration ----------------------------*/
