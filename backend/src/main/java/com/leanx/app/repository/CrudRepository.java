@@ -6,7 +6,7 @@ import java.util.Map;
 
 // Generisches CRUD Repository Interface
 public interface CrudRepository<T> {
-
+    
     /**
      * Creates a new entity in the database.
      * @param entity The entity object containing the details to be persisted.
